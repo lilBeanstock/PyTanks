@@ -26,7 +26,7 @@ def middle(player: Player):
         player['position'][1] + player['dimensions'][1] / 2
     )
 
-def calculateAngle(player: Player):
+def calculateMouseAngle(player: Player):
     x, y = middle(player)
     mouseX, mouseY = player['turret']['mouse']
 

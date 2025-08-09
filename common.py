@@ -5,6 +5,10 @@ HOST = "127.0.0.1"
 PORT = 6969
 BUFFER_SIZE = 1024
 
+# map default colours
+FLOOR = (249, 210, 109)
+WALL = (120, 100, 64)
+
 class Map(TypedDict):
     walls: List[List[Tuple[int, int]]]
 

@@ -1,12 +1,22 @@
 # Example file showing a circle moving on screen
-import pygame
 from socket import socket
-from common import HOST, PORT
+from common import HOST, PORT, FLOOR, WALL
+from os import system, name
+from sys import exit
+import pygame
 
-# connect
+# Connect to the server
 client = socket()
-client.connect((HOST, PORT))
-print("connected!")
+
+# initial clear of console because of prints...
+system('cls' if name == 'nt' else 'clear')
+
+try:
+    client.connect((HOST, PORT))
+    print("Connected!")
+except ConnectionRefusedError:
+    print("Unable to connect! Server might be down or have rejected your connnection attempt, please try again.")
+    exit(1)
 
 # pygame setup
 pygame.init()
@@ -38,7 +48,7 @@ while running:
         client.send("d".encode())
 
     # fill the screen with a color to wipe away anything from last frame
-    screen.fill((249, 210, 109))
+    screen.fill(FLOOR)
 
     # wait for server info about players, map, etc
     # serverDataRaw = client.recv(BUFFER_SIZE) # encoded JSON data
@@ -50,7 +60,7 @@ while running:
 
     # Render the walls
     wall = pygame.rect.Rect(0, 0, 50, 50)
-    pygame.draw.rect(screen, (188, 140, 64), wall)
+    pygame.draw.rect(screen, WALL, wall)
 
     # flip() the display to put your work on screen
     pygame.display.flip()
@@ -60,15 +70,12 @@ while running:
 client.close()
 pygame.quit()
 
-
-
 # pygame setup
 # pygame.init()
 # screen = pygame.display.set_mode((1280, 720))
 # clock = pygame.time.Clock()
 # running = True
 # dt = 0
-
 
 # player_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
 
