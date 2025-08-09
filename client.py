@@ -38,9 +38,19 @@ while running:
         client.send("d".encode())
 
     # fill the screen with a color to wipe away anything from last frame
-    screen.fill("grey")
+    screen.fill((249, 210, 109))
 
-    # RENDER YOUR GAME HERE
+    # wait for server info about players, map, etc
+    # serverDataRaw = client.recv(BUFFER_SIZE) # encoded JSON data
+    # serverData: ServerClientPayload = json.loads(serverDataRaw.decode())
+
+    # serverMap = serverData["map"]
+    # players = serverData["players"]
+    # TODO: make server send info to clients
+
+    # Render the walls
+    wall = pygame.rect.Rect(0, 0, 50, 50)
+    pygame.draw.rect(screen, (188, 140, 64), wall)
 
     # flip() the display to put your work on screen
     pygame.display.flip()

@@ -1,21 +1,24 @@
 from ctypes import CDLL
 from socket import socket
-from common import HOST, PORT
-import asyncio
 from os import path
+from typing import Any, Dict
+from common import HOST, PORT, Player, BUFFER_SIZE
+import Tank
+import asyncio
 
 # Import C functions
 cFunctions = CDLL(path.join(path.dirname(__file__), "lib.so"))
 # cFunctions.myFunction.argtypes = [ctypes.c_int]
 
-# Track connected clients
-clients: set[socket] = set()
+# Track connected clients and the current map
+clients: Dict[socket, Player] = {}
+
+curr_map = 0 # TODO, MAKE FUNCTION FOR CHANGING MAP AFTER MATCH END
 
 # Function for handling client data
-async def handle_client(loop: asyncio.AbstractEventLoop, client_sock: socket, client_addr: str):
+async def handle_client(loop: asyncio.AbstractEventLoop, client_sock: socket, client_addr: Any):
     print(f"[+] Connection from {client_addr}")
-    clients.add(client_sock) # add client to client list
-    BUFFER_SIZE = 1024
+    clients[client_sock] = Tank.randomPlayer() # add client to client list
 
     try:
         while True:
@@ -33,8 +36,12 @@ async def handle_client(loop: asyncio.AbstractEventLoop, client_sock: socket, cl
     except ConnectionResetError:
         print(f"[!] Connection reset by {client_addr}")
     finally:
-        clients.remove(client_sock)
+        del clients[client_sock]
         client_sock.close()
+
+# handle collision, movement, and the broadcasting of information to the clients
+async def handle_game(loop: asyncio.AbstractEventLoop):
+    return 0
 
 async def create_socket():
     server = socket()
@@ -49,6 +56,7 @@ async def create_socket():
         client_sock, client_addr = await loop.sock_accept(server)
         client_sock.setblocking(False)
         loop.create_task(handle_client(loop, client_sock, client_addr))
+        loop.create_task(handle_game(loop))
 
 async def main():
     await create_socket()
