@@ -14,11 +14,11 @@ Python will be running the client and server; however, all movement will be proc
 The client is defined only by client.py and the modules Tank.py and common.py; they need to be in the same folder. Everything except client.py is used by the folder, whereby server.py is the main file. The client file and its dependencies need not be in the same folder as the server and its dependencies.
 
 # Updates and Todo
-- [ ] game state (maps, time limits, player health?, wins, etc)
-- [ ] send payload information form server to client at 60(?) ticks per second to all clients
-- [ ] render all walls present in the map
-- [ ] render tanks with appropriate colour and position
-- [ ] make turret attached to tank and rotate towards mouse
+- [x] game state (maps, time limits, player health?, wins, etc)
+- [x] send payload information form server to client at 60(?) ticks per second to all clients
+- [x] render all walls present in the map
+- [x] render tanks with appropriate colour and position
+- [x] make turret attached to tank and rotate towards mouse
 - [ ] player movement
 	- [ ] collision against walls and other players
 - [ ] add bullet objects

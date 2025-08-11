@@ -1,111 +1,142 @@
 # Example file showing a circle moving on screen
 from socket import socket
-from common import HOST, PORT, FLOOR, WALL
 from os import system, name
+from math import degrees
+from pygame.math import Vector2
+from common import HOST, PORT, MAPS, FLOOR, WALL, BUFFER_SIZE, ServerClientPayload, ClientServerPayload
 from sys import exit
+import Tank
 import pygame
+import json
 
-# Connect to the server
-client = socket()
+def draw_rotated_rectangle(
+    screen: pygame.Surface,
+    rect_surf: pygame.Surface,
+    center_pos: Vector2,
+    angle_rad: float
+) -> None:
+    """
+    Rotates a rectangle (Surface) by a given angle in radians and blits it onto the screen.
 
-# initial clear of console because of prints...
-system('cls' if name == 'nt' else 'clear')
+    Parameters:
+        screen (pygame.Surface): The target surface to blit onto (e.g., the main display).
+        rect_surf (pygame.Surface): The surface representing the rectangle to rotate.
+        center_pos (Vector2): The center position to place the rotated rectangle.
+        angle_rad (float): The rotation angle in radians (counterclockwise).
 
-try:
-    client.connect((HOST, PORT))
-    print("Connected!")
-except ConnectionRefusedError:
-    print("Unable to connect! Server might be down or have rejected your connnection attempt, please try again.")
-    exit(1)
+    Returns:
+        None
+    """
 
-# pygame setup
-pygame.init()
-screen = pygame.display.set_mode((1280, 720))
-clock = pygame.time.Clock()
-running = True
+    angle_deg = degrees(angle_rad)  # Convert radians to degrees
+    rotated_surf = pygame.transform.rotate(rect_surf, angle_deg)
+    new_rect = rotated_surf.get_rect(center=center_pos)
+    screen.blit(rotated_surf, new_rect.topleft)
 
-dt = 0
+def main():
+    # Connect to the server
+    client = socket()
 
-while running:
-    # poll for events
-    # pygame.QUIT event means the user clicked X to close your window
-    for event in pygame.event.get():
-        match event.type:
-            case pygame.QUIT:
-                running = False
-            case _:
-                pass
+    # initial clear of console because of prints...
+    system('cls' if name == 'nt' else 'clear')
 
-    # get keys pressed for processing movement on the server side
-    keys = pygame.key.get_pressed()
-    if keys[pygame.K_w]:
-        client.send("w".encode())
-    if keys[pygame.K_s]:
-        client.send("s".encode())
-    if keys[pygame.K_a]:
-        client.send("a".encode())
-    if keys[pygame.K_d]:
-        client.send("d".encode())
+    try:
+        client.connect((HOST, PORT))
+        print("Connected!")
+    except ConnectionRefusedError:
+        print("Unable to connect! Server might be down or have rejected your connnection attempt, please try again.")
+        exit(1)
 
-    # fill the screen with a color to wipe away anything from last frame
-    screen.fill(FLOOR)
+    # pygame setup
+    pygame.init()
+    screen = pygame.display.set_mode((1280, 720))
+    clock = pygame.time.Clock()
+    running = True
 
-    # wait for server info about players, map, etc
-    # serverDataRaw = client.recv(BUFFER_SIZE) # encoded JSON data
-    # serverData: ServerClientPayload = json.loads(serverDataRaw.decode())
+    # load default payload
+    payload: ClientServerPayload = { 
+        "mouse": (0,0), 
+        "direction": {
+            "up": False,
+            "down": False,
+            "left": False,
+            "right": False
+        }
+    }
 
-    # serverMap = serverData["map"]
-    # players = serverData["players"]
-    # TODO: make server send info to clients
+    buffer = b""
 
-    # Render the walls
-    wall = pygame.rect.Rect(0, 0, 50, 50)
-    pygame.draw.rect(screen, WALL, wall)
+    while running:
+        # poll for events
+        # pygame.QUIT event means the user clicked X to close your window
+        for event in pygame.event.get():
+            match event.type:
+                case pygame.QUIT:
+                    running = False
+                case _:
+                    pass
 
-    # flip() the display to put your work on screen
-    pygame.display.flip()
+        payload["mouse"] = pygame.mouse.get_pos()
 
-    dt = clock.tick(60) / 1000  # limits FPS to 60
+        # get keys pressed for processing movement on the server side
+        keys = pygame.key.get_pressed()
+        payload["direction"]["up"] = keys[pygame.K_w] or keys[pygame.K_UP]
+        payload["direction"]["down"] = keys[pygame.K_s] or keys[pygame.K_DOWN]
+        payload["direction"]["left"] = keys[pygame.K_a] or keys[pygame.K_LEFT]
+        payload["direction"]["right"] = keys[pygame.K_d] or keys[pygame.K_RIGHT]
 
-client.close()
-pygame.quit()
+        # fill the screen with a color to wipe away anything from last frame
+        screen.fill(FLOOR)
 
-# pygame setup
-# pygame.init()
-# screen = pygame.display.set_mode((1280, 720))
-# clock = pygame.time.Clock()
-# running = True
-# dt = 0
+        # wait for server info about players, map, etc
+        while b"\n" not in buffer:
+            buffer += client.recv(BUFFER_SIZE)
 
-# player_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
+        # Only keep one JSON object, considering that recv() likes to take in too much info
+        serverDataRaw, buffer = buffer.split(b"\n", 1)
+        serverData: ServerClientPayload = json.loads(serverDataRaw.decode())
 
-# while running:
-#     # poll for events
-#     # pygame.QUIT event means the user clicked X to close your window
-#     for event in pygame.event.get():
-#         if event.type == pygame.QUIT:
-#             running = False
+        serverMap = MAPS[serverData["map"]]
+        players = serverData["players"]
+        # timeRemaining = serverData["timeRemaining"]
 
-#     # fill the screen with a color to wipe away anything from last frame
-#     screen.fill("purple")
+        # Render the walls
+        for wall in serverMap['walls']:
+            x1, y1 = wall[0]
+            x2, y2 = wall[1]
 
-#     pygame.draw.circle(screen, "red", player_pos, 40)
+            pygame.draw.rect(screen, WALL, pygame.rect.Rect(x1, y1, x2-x1, y2-y1))
 
-#     keys = pygame.key.get_pressed()
-#     if keys[pygame.K_w]:
-#         player_pos.y -= 300 * dt
-#     if keys[pygame.K_s]:
-#         player_pos.y += 300 * dt
-#     if keys[pygame.K_a]:
-#         player_pos.x -= 300 * dt
-#     if keys[pygame.K_d]:
-#         player_pos.x += 300 * dt
+        # render tanks
+        for tank in players:
+            position = tank['position']
+            dimensions = tank['dimensions']
+            colour = tank['colour']
 
-#     # flip() the display to put your work on screen
-#     pygame.display.flip()
+            turret = tank["turret"]
+            cannonDimensions = turret["dimensions"]
+            
+            hull: pygame.Rect = pygame.rect.Rect(position[0], position[1], dimensions[0], dimensions[1])
+            pygame.draw.rect(screen, colour, hull) # hull
 
-#     # limits FPS to 60
-#     # dt is delta time in seconds since last frame, used for framerate-
-#     # independent physics.
-#     dt = clock.tick(60) / 1000
+            angle = Tank.calculateMouseAngle(tank)
 
+            # cannon = pygame.rect.Rect(middle(tank),(cannonDimensions))
+            cannon = pygame.Surface(cannonDimensions, pygame.SRCALPHA)
+            cannon.fill(turret['cannonColour'])
+
+            draw_rotated_rectangle(screen, cannon, Vector2(Tank.translateCannonPosition(tank)), angle)        
+            
+            pygame.draw.circle(screen, turret["colour"], Tank.middle(tank), 15) # turret case
+
+        # flip() the display to put your work on screen
+        pygame.display.flip()
+        clock.tick(60)
+
+        client.sendall(f"{json.dumps(payload)}\n".encode())
+
+    client.close()
+    pygame.quit()
+
+if __name__ == "__main__":
+    main()
