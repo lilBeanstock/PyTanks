@@ -1,15 +1,10 @@
-from ctypes import CDLL
 from socket import socket
-from os import path
 from typing import Any, Dict, Callable, Awaitable
 from common import HOST, PORT, Player, ServerClientPayload, BUFFER_SIZE, ClientServerPayload
 import Tank
 import asyncio
 import json
-
-# Import C functions
-cFunctions = CDLL(path.join(path.dirname(__file__), "lib.so"))
-# cFunctions.myFunction.argtypes = [ctypes.c_int]
+from cLib import lib, RectangleC
 
 # Track connected clients and the current map
 clients: Dict[socket, Player] = {}
@@ -24,7 +19,8 @@ gameState: ServerClientPayload = {
 # Function for handling client data
 async def handle_client(loop: asyncio.AbstractEventLoop, client_sock: socket, client_addr: Any):
     print(f"[+] Connection from {client_addr}")
-    clients[client_sock] = Tank.randomPlayer() # add client to client list, alongside their player state
+    player = clients[client_sock]
+    player = Tank.randomPlayer() # add client to client list, alongside their player state
 
     try:
         buffer = b""
@@ -45,12 +41,13 @@ async def handle_client(loop: asyncio.AbstractEventLoop, client_sock: socket, cl
             payload: ClientServerPayload = json.loads(data.decode())
             print(f"[{client_addr}] {payload}")
 
-            clients[client_sock]['turret']['mouse'] = payload['mouse']
+            player['turret']['mouse'] = payload['mouse']
+            player['directions'] = payload['directions']
 
     except ConnectionResetError:
         print(f"[!] Connection reset by {client_addr}")
     finally:
-        del clients[client_sock]
+        del player
         client_sock.close()
 
 # handle collision, movement, and the broadcasting of information to the clients
@@ -94,6 +91,11 @@ async def main():
     asyncio.create_task(create_socket(loop))
     asyncio.create_task(set_interval(1 / 60, handle_game, loop))
     await asyncio.Event().wait() # Keeps the main coroutine alive
+
+a = RectangleC(0,0,10,10)
+b = RectangleC(11,11,20,20)
+
+print(lib.rectangles_overlap(a,b))
 
 # run server function
 if __name__ == "__main__":

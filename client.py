@@ -56,12 +56,13 @@ def main():
     # load default payload
     payload: ClientServerPayload = { 
         "mouse": (0,0), 
-        "direction": {
+        "directions": {
             "up": False,
             "down": False,
             "left": False,
             "right": False
-        }
+        },
+        "isShooting": False
     }
 
     buffer = b""
@@ -80,10 +81,11 @@ def main():
 
         # get keys pressed for processing movement on the server side
         keys = pygame.key.get_pressed()
-        payload["direction"]["up"] = keys[pygame.K_w] or keys[pygame.K_UP]
-        payload["direction"]["down"] = keys[pygame.K_s] or keys[pygame.K_DOWN]
-        payload["direction"]["left"] = keys[pygame.K_a] or keys[pygame.K_LEFT]
-        payload["direction"]["right"] = keys[pygame.K_d] or keys[pygame.K_RIGHT]
+        payload["directions"]["up"] = keys[pygame.K_w] or keys[pygame.K_UP]
+        payload["directions"]["down"] = keys[pygame.K_s] or keys[pygame.K_DOWN]
+        payload["directions"]["left"] = keys[pygame.K_a] or keys[pygame.K_LEFT]
+        payload["directions"]["right"] = keys[pygame.K_d] or keys[pygame.K_RIGHT]
+        payload["isShooting"] = keys[pygame.K_SPACE] or pygame.mouse.get_pressed()[0]
 
         # fill the screen with a color to wipe away anything from last frame
         screen.fill(FLOOR)

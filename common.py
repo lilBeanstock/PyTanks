@@ -9,8 +9,10 @@ BUFFER_SIZE = 4096
 FLOOR = (249, 210, 109)
 WALL = (120, 100, 64)
 
+Coordinate = Tuple[int, int]
+
 class Map(TypedDict):
-    walls: List[Tuple[Tuple[int, int], Tuple[int, int]]]
+    walls: List[Tuple[Coordinate, Coordinate]]
 
 MAP_DEFAULT: Map = { 
     "walls": [
@@ -21,6 +23,10 @@ MAP_DEFAULT: Map = {
 
 MAPS: List[Map] = [MAP_DEFAULT]
 
+class Velocity(TypedDict):
+    x: float
+    y: float
+
 class Direction(TypedDict):
     up: bool
     down: bool
@@ -28,17 +34,18 @@ class Direction(TypedDict):
     right: bool
 
 class Turret(TypedDict):
-    mouse: Tuple[int, int]
+    mouse: Coordinate
     isShooting: bool
     dimensions: Tuple[float, float]
     colour: Tuple[int, int, int]
     cannonColour: Tuple[int, int, int]
 
 class Player(TypedDict):
-    position: Tuple[int, int]
+    position: Coordinate
     dimensions: Tuple[int, int]
     colour: Tuple[int, int, int]
     directions: Direction
+    velocity: Velocity
     turret: Turret
     kills: int # kills in each match, resets with new
     wins: int
@@ -49,6 +56,6 @@ class ServerClientPayload(TypedDict):
     timeRemaining: int # seconds
 
 class ClientServerPayload(TypedDict):
-    mouse: Tuple[int, int]
-    direction: Direction
-    # isShooting
+    mouse: Coordinate
+    directions: Direction
+    isShooting: bool
