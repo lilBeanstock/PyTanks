@@ -98,9 +98,12 @@ void handle_player_walls_overlap(Map map, Player *player) {
 }
 
 Player* handle_all(Map map, Player *players, size_t playerCount) {
-
     // give players velocity based on key presses
+
     for (int i = 0; i < playerCount; i++) {
+        players[i].velocity.y = 0;
+        players[i].velocity.x = 0;
+        
         if (players[i].directions.up) players[i].velocity.y = -2;
         if (players[i].directions.down) players[i].velocity.y = 2;
         if (players[i].directions.left) players[i].velocity.x = -2;
@@ -117,10 +120,10 @@ Player* handle_all(Map map, Player *players, size_t playerCount) {
     // eventually handle bullet stuff...
 
     // update position based on remaining velocity
-    for (int i = 0; i < playerCount; i++) {
-        players[i].position.x += players[i].velocity.x;
-        players[i].position.y += players[i].velocity.y;
-    }
+    // for (int i = 0; i < playerCount; i++) {
+    //     players[i].position.x += players[i].velocity.x;
+    //     players[i].position.y += players[i].velocity.y;
+    // }
 
     return players;
 }

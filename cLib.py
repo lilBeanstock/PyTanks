@@ -1,6 +1,6 @@
 import ctypes
 from os import path
-from common import Map
+from common import Player, Map, Direction, Velocity
 from typing import List
 
 # Load the shared library
@@ -48,6 +48,9 @@ class MapC(ctypes.Structure):
 lib.rectangles_overlap.argtypes = (RectangleC, RectangleC)  # Specify argument types
 lib.rectangles_overlap.restype = ctypes.c_bool            # Specify return type
 
+lib.handle_all.argtypes = (MapC, ctypes.POINTER(PlayerC),ctypes.c_int)  # Specify argument types
+lib.handle_all.restype = ctypes.POINTER(PlayerC)            # Specify return type
+
 def translateMapC(map: Map):
     walls = map["walls"]
     wallcount = len(map["walls"])
@@ -66,3 +69,84 @@ def translateMapC(map: Map):
 
     c_Map: MapC = MapC(pcWalls ,wallcount)
     return c_Map
+
+def translatePlayerC(player: Player) -> PlayerC:
+    c_pos = PointC(player["position"][0],player["position"][1])
+    c_dim = PointC(player["dimensions"][0],player["dimensions"][1])
+    c_col = (ctypes.c_ubyte * 3)(
+        player["colour"][0],
+        player["colour"][1],
+        player["colour"][2]
+    )
+    c_dir = DirectionC(
+        player["directions"]["up"],
+        player["directions"]["down"],
+        player["directions"]["left"],
+        player["directions"]["right"]
+    )
+    c_vel = VelocityC(player["velocity"]["x"],player["velocity"]["y"])
+    c_kill = ctypes.c_int(player["kills"])
+    c_win = ctypes.c_int(player["wins"])
+
+    c_player = PlayerC(c_pos,c_dim,c_col,c_dir,c_vel,c_kill,c_win)
+    return c_player
+
+def makePlayerArr(playerList: List[Player]):
+    convertedPlayers: List[PlayerC] = []
+    for i in playerList:
+        convertedPlayers.append(translatePlayerC(i))
+    
+    return (PlayerC * len(playerList))(*convertedPlayers)
+
+def translatePlayerPython(c_player: PlayerC) -> Player:
+    pos = (c_player.position.x, c_player.position.y)
+    dim = (c_player.dimensions.x, c_player.dimensions.y)
+    col = (
+        c_player.colour[0],
+        c_player.colour[1],
+        c_player.colour[2]
+    )
+    dir: Direction = {
+        "up": c_player.directions.up,
+        "down": c_player.directions.down,
+        "left": c_player.directions.left,
+        "right": c_player.directions.right,
+    }
+    vel: Velocity = {
+        "x": c_player.velocity.x, 
+        "y": c_player.velocity.y
+    }
+    kill = c_player.kills
+    win = c_player.wins
+
+    player: Player = {
+        "position": pos,
+        "dimensions": dim,
+        "colour": col,
+        "directions": dir,
+        "velocity": vel,
+        "kills": kill,
+        "wins": win,
+        "turret": {
+            "mouse": (0,0),
+            "isShooting": False,
+            "dimensions": (0, 0),
+            "colour": (0,0,0),
+            "cannonColour": (0,0,0)
+        },
+    }
+    return player
+
+def makePlayerList(cPlayerList: ctypes.Array[PlayerC],pyPlayerList: List[Player]):
+    convertedPlayers: List[Player] = []
+
+    if len(pyPlayerList) == 0: return pyPlayerList
+
+
+    for i in range(len(pyPlayerList)):
+        convertedPlayers.append(translatePlayerPython(cPlayerList[i]))
+        convertedPlayers[len(convertedPlayers)-1]["turret"] = pyPlayerList[i]["turret"] 
+        # reset turret info, because it is not used or transmitted by the C counterparts
+
+    
+    return convertedPlayers

@@ -109,6 +109,8 @@ def main():
 
             pygame.draw.rect(screen, WALL, pygame.rect.Rect(x1, y1, x2-x1, y2-y1))
 
+        print(players)
+
         # render tanks
         for tank in players:
             position = tank['position']

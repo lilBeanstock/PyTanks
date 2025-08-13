@@ -1,10 +1,12 @@
 from socket import socket
 from typing import Any, Dict, Callable, Awaitable
-from common import HOST, PORT, Player, ServerClientPayload, BUFFER_SIZE, ClientServerPayload
+from common import HOST, PORT, Player, ServerClientPayload, BUFFER_SIZE, ClientServerPayload, MAPS
 import Tank
 import asyncio
 import json
-from cLib import lib, RectangleC
+import ctypes
+from cLib import PlayerC, lib, makePlayerArr, makePlayerList, translateMapC
+from sys import exit
 
 # Track connected clients and the current map
 clients: Dict[socket, Player] = {}
@@ -19,8 +21,8 @@ gameState: ServerClientPayload = {
 # Function for handling client data
 async def handle_client(loop: asyncio.AbstractEventLoop, client_sock: socket, client_addr: Any):
     print(f"[+] Connection from {client_addr}")
+    clients[client_sock] = Tank.randomPlayer() # add client to client list, alongside their player state
     player = clients[client_sock]
-    player = Tank.randomPlayer() # add client to client list, alongside their player state
 
     try:
         buffer = b""
@@ -47,19 +49,29 @@ async def handle_client(loop: asyncio.AbstractEventLoop, client_sock: socket, cl
     except ConnectionResetError:
         print(f"[!] Connection reset by {client_addr}")
     finally:
-        del player
+        # del player
         client_sock.close()
+        del clients[client_sock]
 
 # handle collision, movement, and the broadcasting of information to the clients
 async def handle_game(loop: asyncio.AbstractEventLoop) -> None:
     # set gameState's "players" as equal to that of the client list's "players"
-    gameState['players'] = list(clients.values())
+    # gameState['players'] = list(clients.values()) 
+    players = list(clients.values())
+    returnedPlayers: ctypes.Array[PlayerC] = lib.handle_all(translateMapC(MAPS[gameState['map']]), makePlayerArr(players), ctypes.c_int(len(players)))
+    gameState['players'] = []
+    gameState['players'] = makePlayerList(returnedPlayers,players) # will use python's list because of the turret information
 
     # and send renewed information to users/clients
-    for sock in clients:
+    for i,sock in enumerate(clients):
+        # update client dictionary
+        clients[sock] = gameState["players"][i]
+
         # send game state and player states to all clients (i never knew that)
         # need not specify who is who, player only needs 2 neurons for that.
+
         await loop.sock_sendall(sock, f"{json.dumps(gameState)}\n".encode())
+            
 
     pass
 
@@ -91,11 +103,6 @@ async def main():
     asyncio.create_task(create_socket(loop))
     asyncio.create_task(set_interval(1 / 60, handle_game, loop))
     await asyncio.Event().wait() # Keeps the main coroutine alive
-
-a = RectangleC(0,0,10,10)
-b = RectangleC(11,11,20,20)
-
-print(lib.rectangles_overlap(a,b))
 
 # run server function
 if __name__ == "__main__":

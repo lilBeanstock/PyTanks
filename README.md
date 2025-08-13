@@ -20,10 +20,11 @@ The client is defined only by client.py and the modules Tank.py and common.py; t
 - [x] render tanks with appropriate colour and position
 - [x] make turret attached to tank and rotate towards mouse
 - [x] run C functions from python
-- [ ] make translator for python to C
+- [x] make translator for python to C
 	- [x] for the Map
-	- [ ] for the players
+	- [x] for the players
 - [ ] player movement
+	- [ ] FIXME: bug where players remain after disconnect and fly off into the distance
 	- [ ] collision against walls and other players
 - [ ] add bullet objects
     - [ ] bullet collisions against walls

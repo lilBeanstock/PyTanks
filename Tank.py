@@ -19,6 +19,7 @@ def randomPlayer() -> Player:
             "colour": turretColour,
             "cannonColour": cannonColour
         },
+        "velocity": { "x": 0, "y": 0 },
         "colour": (randint(0,255), randint(0,255), randint(0,255)),
         "directions": {
             "down": False,
