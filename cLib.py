@@ -48,12 +48,12 @@ class MapC(ctypes.Structure):
 lib.rectangles_overlap.argtypes = (RectangleC, RectangleC)  # Specify argument types
 lib.rectangles_overlap.restype = ctypes.c_bool            # Specify return type
 
-lib.handle_all.argtypes = (MapC, ctypes.POINTER(PlayerC),ctypes.c_int)  # Specify argument types
+lib.handle_all.argtypes = (MapC, ctypes.POINTER(PlayerC),ctypes.c_size_t)  # Specify argument types
 lib.handle_all.restype = ctypes.POINTER(PlayerC)            # Specify return type
 
 def translateMapC(map: Map):
     walls = map["walls"]
-    wallcount = len(map["walls"])
+    wallcount = len(walls)
 
     cWalls: List[WallC] = []
 
@@ -67,7 +67,13 @@ def translateMapC(map: Map):
     # make cWalls into a pointer and return the pointer
     pcWalls = (WallC * wallcount)(*cWalls) # create an initialiser class in the first bracket, then initialise it with *cWalls
 
-    c_Map: MapC = MapC(pcWalls ,wallcount)
+		# build MapC and attach the buffer to it so Python keeps it alive
+    c_Map = MapC()
+    c_Map.walls = ctypes.cast(pcWalls, ctypes.POINTER(WallC))
+    c_Map.wall_count = wallcount
+    # attach the buffer to the MapC instance (prevents GC)
+    c_Map._walls_buf = pcWalls
+
     return c_Map
 
 def translatePlayerC(player: Player) -> PlayerC:
@@ -92,11 +98,10 @@ def translatePlayerC(player: Player) -> PlayerC:
     return c_player
 
 def makePlayerArr(playerList: List[Player]):
-    convertedPlayers: List[PlayerC] = []
-    for i in playerList:
-        convertedPlayers.append(translatePlayerC(i))
-    
-    return (PlayerC * len(playerList))(*convertedPlayers)
+		convertedPlayers = [translatePlayerC(p) for p in playerList]
+		players_arr = (PlayerC * len(convertedPlayers))(*convertedPlayers)
+    # keep it alive by returning the array object (the caller should keep it)
+		return players_arr
 
 def translatePlayerPython(c_player: PlayerC) -> Player:
     pos = (c_player.position.x, c_player.position.y)

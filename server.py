@@ -6,7 +6,6 @@ import asyncio
 import json
 import ctypes
 from cLib import PlayerC, lib, makePlayerArr, makePlayerList, translateMapC
-from sys import exit
 
 # Track connected clients and the current map
 clients: Dict[socket, Player] = {}
@@ -56,11 +55,10 @@ async def handle_client(loop: asyncio.AbstractEventLoop, client_sock: socket, cl
 # handle collision, movement, and the broadcasting of information to the clients
 async def handle_game(loop: asyncio.AbstractEventLoop) -> None:
     # set gameState's "players" as equal to that of the client list's "players"
-    # gameState['players'] = list(clients.values()) 
     players = list(clients.values())
-    returnedPlayers: ctypes.Array[PlayerC] = lib.handle_all(translateMapC(MAPS[gameState['map']]), makePlayerArr(players), ctypes.c_int(len(players)))
-    gameState['players'] = []
-    gameState['players'] = makePlayerList(returnedPlayers,players) # will use python's list because of the turret information
+    players_arr = makePlayerArr(players)
+    _returnedPlayers: ctypes.Array[PlayerC] = lib.handle_all(translateMapC(MAPS[gameState['map']]), players_arr, len(players))
+    gameState['players'] = makePlayerList(players_arr,players) # will use python's list because of the turret information
 
     # and send renewed information to users/clients
     for i,sock in enumerate(clients):
