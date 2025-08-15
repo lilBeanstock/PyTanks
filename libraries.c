@@ -75,8 +75,8 @@ bool player_wall_overlap(Wall wall, Player player) {
     wallRectangle.height = wallDimensions.y;
 
     Rectangle playerRectangle;
-    playerRectangle.x = player.position.x;
-    playerRectangle.y = player.position.y;
+    playerRectangle.x = player.position.x + (int)player.velocity.x;
+    playerRectangle.y = player.position.y + (int)player.velocity.y;
     playerRectangle.width = player.dimensions.x;
     playerRectangle.height = player.dimensions.y;
 
@@ -97,10 +97,38 @@ void handle_player_walls_overlap(Map map, Player *player) {
     }
 }
 
-Player* handle_all(Map map, Player *players, size_t playerCount) {
+bool player_player_overlap(Player playerFocus, Player playerCheck) {
+    // player identifies as a rectangle. happy pride 💖💖💖
+
+    Rectangle playerFocusRectangle;
+    playerFocusRectangle.x = playerFocus.position.x + (int)playerFocus.velocity.x;
+    playerFocusRectangle.y = playerFocus.position.y + (int)playerFocus.velocity.y;
+    playerFocusRectangle.width = playerFocus.dimensions.x;
+    playerFocusRectangle.height = playerFocus.dimensions.y;
+
+    Rectangle playerCheckRectangle;
+    playerCheckRectangle.x = playerCheck.position.x;
+    playerCheckRectangle.y = playerCheck.position.y;
+    playerCheckRectangle.width = playerCheck.dimensions.x;
+    playerCheckRectangle.height = playerCheck.dimensions.y;
+
+    return rectangles_overlap(playerFocusRectangle, playerCheckRectangle);
+}
+
+void handle_player_player_overlap(Player *playerFocus, Player *playerCheck) {
+    bool isOverlapping = player_player_overlap(*playerFocus, *playerCheck);
+    if (!isOverlapping) return;
+
+    if ((*playerFocus).velocity.y > 0 && (*playerFocus).directions.down) (*playerFocus).velocity.y = 0;
+    if ((*playerFocus).velocity.y < 0 && (*playerFocus).directions.up) (*playerFocus).velocity.y = 0;
+    if ((*playerFocus).velocity.x > 0 && (*playerFocus).directions.right) (*playerFocus).velocity.x = 0;
+    if ((*playerFocus).velocity.x < 0 && (*playerFocus).directions.left) (*playerFocus).velocity.x = 0;
+}
+
+void handle_all(Map map, Player *players, size_t playerCount) {
     // give players velocity based on key presses
 
-    for (int i = 0; i < playerCount; i++) {
+    for (size_t i = 0; i < playerCount; i++) {
         players[i].velocity.y = 0;
         players[i].velocity.x = 0;
         
@@ -111,19 +139,24 @@ Player* handle_all(Map map, Player *players, size_t playerCount) {
     }
 
     // handle player to walls overlapping
-    for (int i = 0; i < playerCount; i++) {
+    for (size_t i = 0; i < playerCount; i++) {
         handle_player_walls_overlap(map, &(players[i]));
     }
 
     // handle player to player overlapping
+    for (size_t i = 0; i < playerCount; i++) {
+        for (size_t j = 0; j < playerCount; j++) {
+            if (i == j) continue;
+            
+            handle_player_player_overlap(&(players[i]), &(players[j]));
+        }
+    }
 
     // eventually handle bullet stuff...
 
     // update position based on remaining velocity
-    // for (int i = 0; i < playerCount; i++) {
-    //     players[i].position.x += players[i].velocity.x;
-    //     players[i].position.y += players[i].velocity.y;
-    // }
-
-    return players;
+    for (size_t i = 0; i < playerCount; i++) {
+        players[i].position.x += players[i].velocity.x;
+        players[i].position.y += players[i].velocity.y;
+    }
 }

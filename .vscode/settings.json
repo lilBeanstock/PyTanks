@@ -2,5 +2,21 @@
 	"python.analysis.typeCheckingMode": "strict",
 	"python.analysis.inlayHints.functionReturnTypes": true,
 	"python.analysis.inlayHints.variableTypes": true,
-	"python.analysis.autoImportCompletions": true
+	"python.analysis.autoImportCompletions": true,
+	"files.associations": {
+		"array": "c",
+		"chrono": "c",
+		"deque": "c",
+		"list": "c",
+		"string": "c",
+		"unordered_map": "c",
+		"unordered_set": "c",
+		"vector": "c",
+		"string_view": "c",
+		"format": "c",
+		"initializer_list": "c",
+		"ranges": "c",
+		"span": "c",
+		"text_encoding": "c"
+	}
 }

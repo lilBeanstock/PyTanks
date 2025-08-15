@@ -48,8 +48,8 @@ class MapC(ctypes.Structure):
 lib.rectangles_overlap.argtypes = (RectangleC, RectangleC)  # Specify argument types
 lib.rectangles_overlap.restype = ctypes.c_bool            # Specify return type
 
-lib.handle_all.argtypes = (MapC, ctypes.POINTER(PlayerC),ctypes.c_size_t)  # Specify argument types
-lib.handle_all.restype = ctypes.POINTER(PlayerC)            # Specify return type
+lib.handle_all.argtypes = (MapC, ctypes.POINTER(PlayerC), ctypes.c_size_t)  # Specify argument types
+lib.handle_all.restype = None           # Specify return type
 
 def translateMapC(map: Map):
     walls = map["walls"]
@@ -147,11 +147,9 @@ def makePlayerList(cPlayerList: ctypes.Array[PlayerC],pyPlayerList: List[Player]
 
     if len(pyPlayerList) == 0: return pyPlayerList
 
-
     for i in range(len(pyPlayerList)):
         convertedPlayers.append(translatePlayerPython(cPlayerList[i]))
         convertedPlayers[len(convertedPlayers)-1]["turret"] = pyPlayerList[i]["turret"] 
         # reset turret info, because it is not used or transmitted by the C counterparts
 
-    
     return convertedPlayers

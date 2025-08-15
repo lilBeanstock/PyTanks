@@ -4,8 +4,7 @@ from common import HOST, PORT, Player, ServerClientPayload, BUFFER_SIZE, ClientS
 import Tank
 import asyncio
 import json
-import ctypes
-from cLib import PlayerC, lib, makePlayerArr, makePlayerList, translateMapC
+from cLib import lib, makePlayerArr, makePlayerList, translateMapC
 
 # Track connected clients and the current map
 clients: Dict[socket, Player] = {}
@@ -21,7 +20,6 @@ gameState: ServerClientPayload = {
 async def handle_client(loop: asyncio.AbstractEventLoop, client_sock: socket, client_addr: Any):
     print(f"[+] Connection from {client_addr}")
     clients[client_sock] = Tank.randomPlayer() # add client to client list, alongside their player state
-    player = clients[client_sock]
 
     try:
         buffer = b""
@@ -35,6 +33,10 @@ async def handle_client(loop: asyncio.AbstractEventLoop, client_sock: socket, cl
             if not buffer:
                 break
 
+            player = clients.get(client_sock)
+            if player is None:
+                break
+
             # Only keep one JSON object, considering that recv() likes to take in too much info
             data, buffer = buffer.split(b"\n", 1)
 
@@ -43,7 +45,10 @@ async def handle_client(loop: asyncio.AbstractEventLoop, client_sock: socket, cl
             print(f"[{client_addr}] {payload}")
 
             player['turret']['mouse'] = payload['mouse']
+            player['turret']['isShooting'] = payload['isShooting']
             player['directions'] = payload['directions']
+
+            clients[client_sock] = player
 
     except ConnectionResetError:
         print(f"[!] Connection reset by {client_addr}")
@@ -56,8 +61,12 @@ async def handle_client(loop: asyncio.AbstractEventLoop, client_sock: socket, cl
 async def handle_game(loop: asyncio.AbstractEventLoop) -> None:
     # set gameState's "players" as equal to that of the client list's "players"
     players = list(clients.values())
+    # print(f"BEFORE: {list(clients.values())}")
     players_arr = makePlayerArr(players)
-    _returnedPlayers: ctypes.Array[PlayerC] = lib.handle_all(translateMapC(MAPS[gameState['map']]), players_arr, len(players))
+    gameMap = translateMapC(MAPS[gameState['map']])
+    playersLen = len(players)
+
+    lib.handle_all(gameMap, players_arr, playersLen)
     gameState['players'] = makePlayerList(players_arr,players) # will use python's list because of the turret information
 
     # and send renewed information to users/clients
@@ -69,9 +78,7 @@ async def handle_game(loop: asyncio.AbstractEventLoop) -> None:
         # need not specify who is who, player only needs 2 neurons for that.
 
         await loop.sock_sendall(sock, f"{json.dumps(gameState)}\n".encode())
-            
-
-    pass
+    
 
 async def create_socket(loop: asyncio.AbstractEventLoop):
     server = socket()
