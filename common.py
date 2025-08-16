@@ -34,13 +34,23 @@ class Direction(TypedDict):
     right: bool
 
 class Turret(TypedDict):
+    radius: int
     mouse: Coordinate
     isShooting: bool
     dimensions: Tuple[float, float]
     colour: Tuple[int, int, int]
     cannonColour: Tuple[int, int, int]
 
+class Bullet(TypedDict):
+    radius: int
+    position: Coordinate
+    velocity: Velocity
+    colour: Tuple[int, int, int]
+    bounces: int
+    player_id: int
+
 class Player(TypedDict):
+    id: int
     position: Coordinate
     dimensions: Tuple[int, int]
     colour: Tuple[int, int, int]
@@ -52,8 +62,9 @@ class Player(TypedDict):
 
 class ServerClientPayload(TypedDict):
     map: int
-    players: List[Player]
     timeRemaining: int # seconds
+    players: List[Player]
+    bullets: List[Bullet]
 
 class ClientServerPayload(TypedDict):
     mouse: Coordinate

@@ -100,6 +100,7 @@ def main():
 
         serverMap = MAPS[serverData["map"]]
         players = serverData["players"]
+        bullets = serverData["bullets"]
         # timeRemaining = serverData["timeRemaining"]
 
         # Render the walls
@@ -116,22 +117,23 @@ def main():
             position = tank['position']
             dimensions = tank['dimensions']
             colour = tank['colour']
-
             turret = tank["turret"]
             cannonDimensions = turret["dimensions"]
+            radius = turret["radius"]
             
             hull: pygame.Rect = pygame.rect.Rect(position[0], position[1], dimensions[0], dimensions[1])
             pygame.draw.rect(screen, colour, hull) # hull
 
-            angle = Tank.calculateMouseAngle(tank)
-
-            # cannon = pygame.rect.Rect(middle(tank),(cannonDimensions))
             cannon = pygame.Surface(cannonDimensions, pygame.SRCALPHA)
             cannon.fill(turret['cannonColour'])
 
+            pygame.draw.circle(screen, colour, Tank.middle(tank), radius) # turret case
+
+            angle = Tank.calculateMouseAngle(tank)
             draw_rotated_rectangle(screen, cannon, Vector2(Tank.translateCannonPosition(tank)), angle)        
-            
-            pygame.draw.circle(screen, turret["colour"], Tank.middle(tank), 15) # turret case
+
+        for bullet in bullets:
+            pygame.draw.circle(screen, bullet['colour'], bullet['position'], bullet['radius'])
 
         # flip() the display to put your work on screen
         pygame.display.flip()

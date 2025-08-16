@@ -17,6 +17,7 @@
 		"initializer_list": "c",
 		"ranges": "c",
 		"span": "c",
-		"text_encoding": "c"
+		"text_encoding": "c",
+		"random": "c"
 	}
 }

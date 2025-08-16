@@ -27,7 +27,10 @@ The client is defined only by client.py and the modules Tank.py and common.py; t
 	- [x] FIXME: bug where players remain after disconnect and fly off into the distance
 	- [x] collision against walls
 	- [x] collision against other players
+		- [ ] BUG?: can move in direction where not other player in way
 - [ ] add bullet objects
+	- [x] spawn bullets on click
+	- [ ] correct bullet velocity
 	- [ ] bullet collisions against walls to bounce
 	- [ ] hit detection on players and other bullets to despawn
 - [ ] handle game mechanics
