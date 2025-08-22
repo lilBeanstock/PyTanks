@@ -56,6 +56,18 @@ async def handle_client(loop: asyncio.AbstractEventLoop, client_sock: socket, cl
 
             if payload["isShooting"] and len(bullets[player_id]) < 5 and not prevShooting:
                 prevShooting = True
+                
+                angle = Tank.calculateMouseAngle(player)
+                mid = Tank.middle(player)
+                dx = player['turret']['mouse'][0] - mid[0]
+                dy = player['turret']['mouse'][1] - mid[1]
+                if dx == 0 and dy == 0:
+                    angle = 0.0
+                
+                speed = 5.0
+                vx = speed * cos(angle)
+                vy = -speed * sin(angle)
+                
                 bullet: Bullet = {
                     "bounces": 0,
                     "colour": player['colour'],
@@ -63,12 +75,14 @@ async def handle_client(loop: asyncio.AbstractEventLoop, client_sock: socket, cl
                     "position": Tank.bulletInitPosition(player),
                     "radius": 5,
                     "velocity": {
-                        "x": 5*cos(Tank.calculateMouseAngle(player)),
-                        "y": -5*sin(Tank.calculateMouseAngle(player))
+                        "x": vx,
+                        "y": vy
                     }
                 }
 
                 bullets[player_id].append(bullet)
+
+                # print(payload["mouse"], Tank.calculateMouseAngle(player),manualAngle,bullets[player_id][len(bullets)-1]["velocity"])
             if not payload["isShooting"]: 
                 prevShooting = False
 

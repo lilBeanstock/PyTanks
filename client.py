@@ -3,7 +3,7 @@ from socket import socket
 from os import system, name
 from math import degrees
 from pygame.math import Vector2
-from common import HOST, PORT, MAPS, FLOOR, WALL, BUFFER_SIZE, ServerClientPayload, ClientServerPayload
+from common import HOST, PORT, PYGAME_WINDOW, MAPS, FLOOR, WALL, BUFFER_SIZE, ServerClientPayload, ClientServerPayload
 from sys import exit
 import Tank
 import pygame
@@ -49,7 +49,7 @@ def main():
 
     # pygame setup
     pygame.init()
-    screen = pygame.display.set_mode((1280, 720))
+    screen = pygame.display.set_mode(PYGAME_WINDOW)
     clock = pygame.time.Clock()
     running = True
 
@@ -109,8 +109,6 @@ def main():
             x2, y2 = wall[1]
 
             pygame.draw.rect(screen, WALL, pygame.rect.Rect(x1, y1, x2-x1, y2-y1))
-
-        print(players)
 
         # render tanks
         for tank in players:

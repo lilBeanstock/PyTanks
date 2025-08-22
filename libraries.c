@@ -5,8 +5,8 @@
 
 // Define a structure for a point (x, y)
 typedef struct {
-    int x;
-    int y;
+    float x;
+    float y;
 } Point;
 
 typedef struct {
@@ -153,24 +153,23 @@ typedef enum {
 // reference: https://stackoverflow.com/a/402010
 Side bullet_rectangle_overlap(Bullet bullet, Rectangle rect) {
     struct CircleDistance {
-        int x;
-        int y;
+        float x;
+        float y;
     };
 
     struct CircleDistance circleDistance;
     circleDistance.x = abs(bullet.position.x - rect.x);
     circleDistance.y = abs(bullet.position.y - rect.y);
-
     
     if (circleDistance.x > (rect.width / 2 + bullet.radius)) return -1;
     if (circleDistance.y > (rect.height / 2 + bullet.radius)) return -1;
 
-    // if (circleDistance.x <= (rect.width / 2)) {
-    //     return bullet.velocity.x > 0 ? Left : Right;
-    // }
-    // if (circleDistance.y <= (rect.height / 2)) {
-    //     return bullet.velocity.y > 0 ? Up : Down;
-    // }
+    if (circleDistance.x <= (rect.width / 2)) {
+        return bullet.velocity.x > 0 ? Left : Right;
+    }
+    if (circleDistance.y <= (rect.height / 2)) {
+        return bullet.velocity.y > 0 ? Up : Down;
+    }
 
     // Corner collision: determine which side is closest to the bullet's center
     float cornerDistance_sq = pow(circleDistance.x - rect.width / 2, 2) +
@@ -191,6 +190,8 @@ Side bullet_rectangle_overlap(Bullet bullet, Rectangle rect) {
 void handle_bullet_wall_overlap(Map map, Bullet *bullet) {
     for (int i = 0; i < map.wall_count; i++) {
         int isOverlapping = bullet_rectangle_overlap(*bullet, wall_to_rectangle(map.walls[i]));
+        printf("%d",isOverlapping);
+        fflush(stdout);
         if (isOverlapping == -1) continue;
 
         // if upper or lower side collision, flip y, otherwise flip x

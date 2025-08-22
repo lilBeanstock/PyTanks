@@ -18,8 +18,8 @@ class VelocityC(ctypes.Structure):
                 ("y", ctypes.c_float)]
 
 class PointC(ctypes.Structure):
-    _fields_ = [("x", ctypes.c_int),
-                ("y", ctypes.c_int)]
+    _fields_ = [("x", ctypes.c_float),
+                ("y", ctypes.c_float)]
 
 class DirectionC(ctypes.Structure):
     _fields_ = [("up", ctypes.c_bool),

@@ -42,9 +42,9 @@ def middle(player: Player):
 def bulletInitPosition(player: Player):
     mid = middle(player)
     angle = calculateMouseAngle(player)
-    distance = 28 # ~ 50/1.8
+    distance = player['dimensions'][0] / 1.8
 
-    return (round(distance*cos(angle)+mid[0]), round(mid[1]-distance*sin(angle)))
+    return (distance*cos(angle)+mid[0], mid[1]-distance*sin(angle))
 
 # Edge of the cannon is in the center of the tank when rotated.
 def translateCannonPosition(player: Player):

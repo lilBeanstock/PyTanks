@@ -30,7 +30,7 @@ The client is defined only by client.py and the modules Tank.py and common.py; t
 		- [ ] BUG?: can move in direction where not other player in way
 - [ ] add bullet objects
 	- [x] spawn bullets on click
-	- [ ] correct bullet velocity
+	- [x] correct bullet initial velocity/position
 	- [ ] bullet collisions against walls to bounce
 	- [ ] hit detection on players and other bullets to despawn
 - [ ] handle game mechanics
